@@ -30,6 +30,7 @@ html {
 }
 body {
     height: 100vh;
+    height: 100dvh; /* visible viewport on mobile; 100vh includes the hidden toolbar area */
     min-height: var(--app-height);
     width: 100%;
     margin: 0;
@@ -86,6 +87,11 @@ main {
     width: 100%;
     max-width: 100%;
     display: block;
+    clip-path: inset(0); /* keep blur inside the image bounds */
+    transition: filter 0.3s ease;
+}
+#image.loading {
+    filter: blur(12px);
 }
 #actualPrice {
     display: none;

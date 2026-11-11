@@ -13,6 +13,10 @@ function shuffle(array) {
     }
     return array;
 }
+// Start downloading this game's 5 images in the background
+function preloadImages() {
+    watches.slice(0, 5).forEach(watch => { new Image().src = watch.image; });
+}
 async function loadWatches() {
     try {
         const response = await fetch("data/watches.json");
@@ -21,6 +25,7 @@ async function loadWatches() {
         console.error("Failed to load watch data:", error);
     }
     shuffle(watches);
+    preloadImages();
 }
 loadWatches();
 
@@ -30,11 +35,16 @@ async function loadRandomWatch() {
     randomWatch = watches[r - 1];
     // document.getElementById("image").src = randomWatch.image;
     const img = document.getElementById("image");
-    await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = randomWatch.image;
-    });
+    img.classList.add("loading");
+    try {
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = randomWatch.image;
+        });
+    } finally {
+        img.classList.remove("loading");
+    }
 
     document.getElementById("name").textContent = randomWatch.name;
     document.getElementById("date-sold").textContent = "Sold: " + randomWatch.dateSold;
@@ -52,6 +62,7 @@ function roundSummary() {
     p += roundPoints;
 
     document.getElementById("roundPoints").textContent = "";
+    document.getElementById("next").style.visibility = "hidden";
     let actualPrice = document.getElementById("actualPrice");
     actualPrice.style.display = "block";
 
@@ -71,6 +82,7 @@ function roundSummary() {
             actualPrice.textContent = "$" + randomWatch.price.toLocaleString("en-US");
             document.getElementById("sold").classList.add("show");
             document.getElementById("roundPoints").textContent = "+" + roundPoints + " Points";
+            document.getElementById("next").style.visibility = "visible";
         }
     }
     requestAnimationFrame(update);
@@ -111,6 +123,7 @@ document.querySelector("#input-container button").addEventListener("click", () =
     document.getElementById("guess").placeholder = "$0";
 });
 document.getElementById("next").addEventListener("click", async () => {
+    document.getElementById("next").style.visibility = "hidden"; // prevent double clicks while next image loads
     document.getElementById("sold").classList.remove("show");
     document.getElementById("actualPrice").style.display = "none";
     r++;
@@ -127,6 +140,7 @@ document.getElementById("again").addEventListener("click", () => {
     p = 0;
 
     shuffle(watches);
+    preloadImages();
     
     document.getElementById("name").style.fontSize = "24px";
     document.getElementById("game-summary").style.display = "none";
